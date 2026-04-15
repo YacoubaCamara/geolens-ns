@@ -10,26 +10,20 @@ const supabase = createClient(
 
 const anthropic = new Anthropic({ apiKey: process.env.GEOLENS_ANTHROPIC_API_KEY });
 
-let embedder = null;
 async function getEmbedding(text) {
-  const { pipeline, env } = await import("@xenova/transformers");
-  env.allowLocalModels = false;
-  env.useBrowserCache = false;
-  env.backends = {
-    onnx: {
-      wasm: {
-        wasmPaths: "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/",
-        numThreads: 1,
-      },
+  const res = await fetch("https://api.voyageai.com/v1/embeddings", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.VOYAGE_GEOLENS_API_KEY}`,
+      "Content-Type": "application/json",
     },
-  };
-
-  const embedder = await pipeline(
-    "feature-extraction",
-    "Xenova/all-MiniLM-L6-v2"
-  );
-  const output = await embedder(text, { pooling: "mean", normalize: true });
-  return Array.from(output.data);
+    body: JSON.stringify({
+      model: "voyage-3-lite",
+      input: [text],
+    }),
+  });
+  const data = await res.json();
+  return data.data[0].embedding;
 }
 
 async function retrieveContext(question) {
@@ -90,8 +84,8 @@ ${context}`;
           }
         }
       } catch (err) {
-        console.error("Stream error:", err);
-        controller.enqueue(encoder.encode("Error generating response."));
+        console.error("Stream error:", err.message);
+        controller.enqueue(encoder.encode(`Error: ${err.message}`));
       }
 
       controller.close();
