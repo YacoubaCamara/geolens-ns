@@ -18,7 +18,7 @@ async function getEmbedding(text) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "voyage-3-lite",
+      model: "voyage-3",
       input: [text],
     }),
   });
