@@ -1,6 +1,5 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["@xenova/transformers"],
+  serverExternalPackages: ["@xenova/transformers", "onnxruntime-node", "sharp"],
   devIndicators: false,
 };
 
