@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# GeoLens NS 
 
-## Getting Started
+AI-powered geoscience assistant for Nova Scotia. Ask plain-language questions about rocks, minerals, and regional geology, then explore the answers through an interactive map.
 
-First, run the development server:
+**Live:** https://geolens-ns.vercel.app
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Introduction
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+GeoLens NS makes Nova Scotia geoscience data easier to explore. Instead of digging through dense government PDFs, users can ask questions in natural language and get grounded answers with source citations.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app also includes an interactive mineral map, linking conversational search with location-based exploration.
 
-## Learn More
+It is designed for both technical users and curious residents who want a faster, more intuitive way to understand Nova Scotia’s geology.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### AI Chat
+- Ask plain-English questions about Nova Scotia geology, rocks, and minerals  
+- Uses a retrieval-augmented generation (RAG) pipeline  
+- Returns cited responses grounded in retrieved PDF chunks  
+- Streams answers live for a responsive experience  
 
-## Deploy on Vercel
+### Interactive Mineral Map
+- Displays 20+ verified Nova Scotia mineral sites  
+- Dark-themed Leaflet map with color-coded markers by commodity type  
+- Click a site to view mineral, status, and county information  
+- “Ask AI about this site” connects map → chatbot with a contextual query  
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tech Stack
+
+- Frontend -> Next.js 14
+- LLM -> Claude Haiku (Anthropic) 
+- Embeddings -> Voyage AI 
+- Vector Database -> Supabase pgvector 
+- Map -> Leaflet.js 
+- Deployment -> Vercel 
+
+---
+
+## Architecture
+
+### RAG Pipeline
+
+1. User submits a question  
+2. Question is embedded using Voyage AI 
+3. Supabase pgvector performs cosine similarity search on stored embeddings  
+4. Relevant PDF chunks are retrieved  
+5. Context + question are sent to Claude Haiku  
+6. Response is generated and streamed back with citations  
+
+---
+
+### PDF Ingestion Pipeline
+
+The pipeline uses a fallback strategy:
+
+#### 1. `pdftotext`
+- Fast extraction from structured PDFs  
+- Works for clean, machine-readable files  
+
+#### 2. `qpdf` repair + `pdftotext`
+- Repairs corrupted PDFs  
+- Retries text extraction after fixing structure  
+
+#### 3. OCR fallback
+- Used for scanned/image-based PDFs  
+- Renders pages as images and extracts text visually  
+
+After extraction:
+- Text is chunked into overlapping segments  
+- Each chunk is embedded with Voyage AI  
+- Stored in Supabase with metadata 
+
+---
